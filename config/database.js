@@ -20,11 +20,11 @@ async function connectDatabase() {
     try {
         const client = await pool.connect();
         console.log('✅ Connected to PostgreSQL database successfully');
-        
+
         // Test query
         const result = await client.query('SELECT NOW()');
         console.log('🕒 Database time:', result.rows[0].now);
-        
+
         client.release();
         return true;
     } catch (error) {
@@ -39,7 +39,7 @@ async function executeQuery(text, params = []) {
     try {
         const result = await pool.query(text, params);
         const duration = Date.now() - start;
-        console.log(🔍 Query executed in ms);
+        console.log("🔍 Query executed in ms");
         return result;
     } catch (error) {
         console.error('❌ Query execution failed:', error.message);

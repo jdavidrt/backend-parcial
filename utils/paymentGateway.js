@@ -2,7 +2,7 @@
 
 // Payment gateway configuration
 const PAYMENT_GATEWAY_CONFIG = {
-    baseURL: process.env.PAYMENT_GATEWAY_URL || 'https://api.paymentgateway.example.com',
+    baseURL: process.env.PAYMENT_GATEWAY_URL || 'https://pasarela-433766410684.europe-west1.run.app',
     timeout: 30000, // 30 seconds
     apiKey: process.env.PAYMENT_GATEWAY_API_KEY || 'your-api-key-here'
 };
@@ -21,7 +21,7 @@ async function sendToPaymentGateway(transactionData) {
             timestamp: new Date().toISOString()
         };
 
-        const response = await axios.post('/process-payment', payload, {
+        const response = await axios.post('/payment/process', payload, {
             baseURL: PAYMENT_GATEWAY_CONFIG.baseURL,
             timeout: PAYMENT_GATEWAY_CONFIG.timeout,
             headers: {
