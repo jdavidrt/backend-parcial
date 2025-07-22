@@ -1,0 +1,20 @@
+﻿services:
+  - type: web
+    name: ecommerce-backend
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_USER
+        value: neondb_owner
+      - key: DB_PASSWORD
+        value: npg_e4WPqoNbdC2s
+      - key: DB_HOST
+        value: ep-lively-firefly-a2bmasqy.eu-central-1.aws.neon.tech
+      - key: DB_NAME
+        value: neondb
+      - key: DB_PORT
+        value: 5432
