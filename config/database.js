@@ -19,16 +19,31 @@ const pool = new Pool({
 async function connectDatabase() {
     try {
         const client = await pool.connect();
-        console.log('✅ Connected to PostgreSQL database successfully');
+        console.log('Connected to PostgreSQL database successfully');
 
         // Test query
         const result = await client.query('SELECT NOW()');
-        console.log('🕒 Database time:', result.rows[0].now);
+        console.log('Database time:', result.rows[0].now);
+
+        // Ensure transactions table exists
+        const createTableQuery = `
+            CREATE TABLE IF NOT EXISTS transactions (
+                TransactionId VARCHAR(255) PRIMARY KEY,
+                Cedula VARCHAR(255) NOT NULL,
+                Estado_trans VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+                Precio_total DECIMAL(10, 2) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+
+        await client.query(createTableQuery);
+        console.log('Database schema verified successfully');
 
         client.release();
         return true;
     } catch (error) {
-        console.error('❌ Database connection failed:', error.message);
+        console.error('Database connection failed:', error.message);
         throw error;
     }
 }
@@ -39,16 +54,40 @@ async function executeQuery(text, params = []) {
     try {
         const result = await pool.query(text, params);
         const duration = Date.now() - start;
-        console.log("🔍 Query executed in ms");
+        console.log(`Query executed in ${duration}ms`);
+
+        // Log query details in development
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Query:', text.replace(/\s+/g, ' ').trim());
+            if (params.length > 0) {
+                console.log('Parameters:', params);
+            }
+        }
+
         return result;
     } catch (error) {
-        console.error('❌ Query execution failed:', error.message);
+        const duration = Date.now() - start;
+        console.error(`Query execution failed after ${duration}ms:`, error.message);
+        console.error('Failed query:', text.replace(/\s+/g, ' ').trim());
+        if (params.length > 0) {
+            console.error('Query parameters:', params);
+        }
         throw error;
     }
+}
+
+// Get pool status
+function getPoolStatus() {
+    return {
+        totalCount: pool.totalCount,
+        idleCount: pool.idleCount,
+        waitingCount: pool.waitingCount
+    };
 }
 
 module.exports = {
     pool,
     connectDatabase,
-    executeQuery
+    executeQuery,
+    getPoolStatus
 };

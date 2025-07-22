@@ -6,19 +6,73 @@ const PAYMENT_GATEWAY_CONFIG = {
     timeout: 30000 // 30 seconds
 };
 
-// Send transaction to payment gateway
-async function sendToPaymentGateway({ id_usuario, id_banco, id_cuenta, monto }) {
+// Send transaction to payment gateway with proper mapping
+async function sendToPaymentGateway({ TransactionId, Cedula, Precio_total, Bank = 1, Cuenta = 12345 }) {
     try {
-        console.log("📤 Sending to payment gateway: Transaction");
+        console.log(`Sending transaction ${TransactionId} to payment gateway`);
 
+        // Map your data to the payment gateway's expected format
         const payload = {
-            id_usuario,
-            id_banco,
-            id_cuenta,
-            monto
+            id_usuario: parseInt(Cedula), // Using Cedula as user ID
+            id_banco: Bank, // Default to 1 if not provided
+            id_cuenta: Cuenta, // Default account or you can generate/map this
+            monto: parseFloat(Precio_total)
         };
 
+        console.log('Payment gateway payload:', JSON.stringify(payload, null, 2));
+
         const response = await axios.post('/payment/process', payload, {
+            baseURL: PAYMENT_GATEWAY_CONFIG.baseURL,
+            timeout: PAYMENT_GATEWAY_CONFIG.timeout,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        console.log(`Payment gateway response status: ${response.status}`);
+        console.log('Payment gateway response data:', JSON.stringify(response.data, null, 2));
+
+        return {
+            success: true,
+            data: response.data,
+            status: response.status,
+            transactionId: TransactionId
+        };
+
+    } catch (error) {
+        console.error('Payment gateway error details:', {
+            message: error.message,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            url: error.config?.url
+        });
+
+        return {
+            success: false,
+            error: error.message,
+            status: error.response?.status || 500,
+            data: error.response?.data,
+            transactionId: TransactionId
+        };
+    }
+}
+
+// Test connectivity to payment gateway
+async function testPaymentGatewayConnection() {
+    try {
+        console.log('Testing payment gateway connectivity...');
+
+        // Test with sample data
+        const testPayload = {
+            id_usuario: 1001,
+            id_banco: 1,
+            id_cuenta: 12345,
+            monto: 100.00
+        };
+
+        const response = await axios.post('/payment/process', testPayload, {
             baseURL: PAYMENT_GATEWAY_CONFIG.baseURL,
             timeout: PAYMENT_GATEWAY_CONFIG.timeout,
             headers: {
@@ -26,66 +80,25 @@ async function sendToPaymentGateway({ id_usuario, id_banco, id_cuenta, monto }) 
             }
         });
 
-        console.log("📥 Payment gateway response status:", response.status);
-
         return {
             success: true,
-            data: response.data,
-            status: response.status
+            message: 'Payment gateway is reachable',
+            status: response.status,
+            data: response.data
         };
 
     } catch (error) {
-        console.error('❌ Payment gateway error:', {
-            message: error.message,
-            status: error.response?.status,
-            data: error.response?.data
-        });
-
         return {
             success: false,
+            message: 'Payment gateway connection failed',
             error: error.message,
-            status: error.response?.status || 500,
+            status: error.response?.status,
             data: error.response?.data
         };
-    }
-}
-
-// Send transaction to bank (alternative endpoint if needed)
-async function sendToBank(bankData) {
-    try {
-        const { Cedula, Precio_total, Bank } = bankData;
-
-        console.log("🏦 Sending to bank: for Cedula");
-
-        const payload = {
-            customerCedula: Cedula,
-            amount: Precio_total,
-            bankCode: Bank,
-            timestamp: new Date().toISOString()
-        };
-
-        // This would be your bank's API endpoint
-        const response = await axios.post('/bank-transfer', payload, {
-            baseURL: process.env.BANK_API_URL || 'https://api.bank.example.com',
-            timeout: PAYMENT_GATEWAY_CONFIG.timeout,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        return {
-            success: true,
-            data: response.data,
-            status: response.status
-        };
-
-    } catch (error) {
-        console.error('❌ Bank API error:', error.message);
-        throw error;
     }
 }
 
 module.exports = {
     sendToPaymentGateway,
-    sendToBank
+    testPaymentGatewayConnection
 };
