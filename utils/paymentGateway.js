@@ -12,7 +12,7 @@ async function sendToPaymentGateway(transactionData) {
     try {
         const { TransactionId, Precio_total, Cedula } = transactionData;
 
-        console.log(📤 Sending to payment gateway: Transaction );
+        console.log("📤 Sending to payment gateway: Transaction ");
 
         const payload = {
             transactionId: TransactionId,
@@ -26,12 +26,12 @@ async function sendToPaymentGateway(transactionData) {
             timeout: PAYMENT_GATEWAY_CONFIG.timeout,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': Bearer ,
+                'Authorization': Bearer,
                 'X-Request-ID': TransactionId
             }
         });
 
-        console.log(📥 Payment gateway response status: );
+        console.log("📥 Payment gateway response status: ");
 
         return {
             success: true,
@@ -60,7 +60,7 @@ async function sendToBank(bankData) {
     try {
         const { Cedula, Precio_total, Bank } = bankData;
 
-        console.log(🏦 Sending to bank:  for Cedula );
+        console.log("🏦 Sending to bank:  for Cedula ");
 
         const payload = {
             customerCedula: Cedula,
@@ -75,7 +75,7 @@ async function sendToBank(bankData) {
             timeout: PAYMENT_GATEWAY_CONFIG.timeout,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': Bearer ,
+                'Authorization': Bearer,
             }
         });
 
